@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>טופס כישלון - טסט פנימי</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; padding: 20px; direction: rtl; }
+        .form-container { max-width: 1100px; margin: auto; background: white; padding: 30px; border: 2px solid #000; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: relative; }
+        .header { text-align: center; border-bottom: 2px solid #000; margin-bottom: 10px; padding-bottom: 5px; }
+        .header h1 { margin: 0; font-size: 24px; color: #1a3a1a; }
+        .header h2 { margin: 2px 0; font-size: 18px; }
+        .top-info { display: grid; grid-template-columns: 1.5fr 1fr; gap: 15px; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+        .vehicle-types { font-size: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; border: 1px solid #ccc; padding: 5px; background: #f9f9f9; }
+        .details-section { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 15px; background: #fdfdfd; padding: 5px; border: 1px solid #eee; }
+        .field { display: flex; flex-direction: column; gap: 2px; }
+        .field label { font-weight: bold; font-size: 11px; color: #555; }
+        input[type="text"], input[type="date"], input[type="time"] { border: 1px solid #ccc; border-radius: 3px; width: 100%; padding: 4px; font-family: inherit; font-size: 13px; font-weight: bold; background: #fff; }
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 2px solid #000; }
+        .column { border: 0.5px solid #000; display: flex; flex-direction: column; }
+        .column-title { background: #333; color: #fff; font-weight: bold; text-align: center; padding: 5px; border-bottom: 2px solid #000; font-size: 14px; }
+        .row-item { display: flex; align-items: center; border-bottom: 1px solid #ccc; padding: 2px 5px; min-height: 28px; page-break-inside: avoid; flex-wrap: wrap; }
+        .label-text { flex: 1; font-size: 12px; font-weight: 500; line-height: 1.1; min-width: 120px; }
+        .score-select { width: 60px; font-size: 11px; margin-left: 5px; border: 1px solid #ccc; cursor: pointer; height: 22px; }
+        .reason-select { display: none; width: 100%; margin-top: 4px; font-size: 12px; font-weight: bold; color: #b00; border: 1px solid #ffcccc; background: #fff5f5; padding: 3px; }
+        .visual-box { width: 22px; height: 22px; border: 1px solid #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; background: #fff; margin-right: 5px; flex-shrink: 0; }
+        .v-mark { color: green; } .x-mark { color: red; } .ox-mark { color: red; width: 16px; height: 16px; border: 2px solid red; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+        .footer { margin-top: 10px; display: flex; gap: 15px; }
+        .notes-area { flex: 2; min-height: 80px; height: auto; border: 1px solid #000; padding: 5px; font-family: inherit; resize: none; font-size: 13px; line-height: 1.4; background: #fffff0; overflow: hidden; }
+        .summary-box { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 5px; }
+        .fail-stamp { border: 3px solid red; color: red; padding: 2px 10px; text-align: center; font-size: 20px; font-weight: bold; transform: rotate(-3deg); align-self: center; }
+        .digital-sig-box { text-align: center; border: 1px dashed #999; padding: 2px; background: #fff; }
+        canvas { cursor: crosshair; display: block; margin: 0 auto; }
+        .clear-btn { background: #eee; border: 1px solid #ccc; font-size: 10px; padding: 2px 5px; cursor: pointer; margin-top: 2px; width: 100%; }
+        .bottom-actions { text-align: center; margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .btn-action { padding: 12px 25px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; font-size: 16px; color: white; display: flex; align-items: center; gap: 5px; }
+        .btn-print { background: #c00; } .btn-back { background: #555; } .btn-whatsapp { background: #25D366; } .btn-later { background: #ff9800; color: #000; }
+
+        /* כפתור חזרה לדוח */
+        .return-btn {
+            position: fixed; top: 10px; right: 10px; z-index: 999;
+            background: #28a745; color: white; padding: 10px 20px;
+            border-radius: 5px; text-decoration: none; font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        @media print {
+            @page { size: A4 landscape; margin: 5mm; }
+            body { padding: 0; background: white; margin: 0; -webkit-print-color-adjust: exact; }
+            .form-container { border: none; box-shadow: none; width: 100%; max-width: 100%; padding: 0; }
+            .no-print, .bottom-actions, .score-select, .clear-btn, .reason-select, .return-btn { display: none !important; }
+            .row-item { min-height: 20px; padding: 1px 4px; }
+            .notes-area { border: 1px solid #000; overflow: visible; }
+        }
+    </style>
+</head>
+<body>
+
+<a href="#" onclick="goBack()" class="return-btn no-print">↩ חזור לטסט פנימי</a>
+
+<div class="form-container" autocomplete="off" id="mainForm">
+    <div class="header">
+        <h1>טסט פנימי</h1>
+        <h2>תוצאות מבחן מעשי ברכב (נכשל)</h2>
+    </div>
+
+    <div class="top-info">
+        <div class="vehicle-types">
+            <label><input type="checkbox" class="save-state" id="vt_B"> פרטי/מסחרי (B)</label>
+            <label><input type="checkbox" class="save-state" id="vt_C1"> משא קל (C1)</label>
+            <label><input type="checkbox" class="save-state" id="vt_C"> משא כבד (C)</label>
+            <label><input type="checkbox" class="save-state" id="vt_E"> גורר תומך (E)</label>
+            <label><input type="checkbox" class="save-state" id="vt_D"> אוטובוס (D)</label>
+            <label><input type="checkbox" class="save-state" id="vt_A"> אופנוע (A)</label>
+            <label><input type="checkbox" class="save-state" id="vt_Taxi"> מונית</label>
+        </div>
+        <div class="field" style="justify-content: center;">
+            <label>שם בית הספר לנהיגה:</label>
+            <input type="text" id="targetSchool" autocomplete="off">
+        </div>
+    </div>
+
+    <div class="details-section">
+        <div class="field"><label>שם משפחה:</label><input type="text" id="targetLastName" autocomplete="off" oninput="updatePageTitle()"></div>
+        <div class="field"><label>שם פרטי:</label><input type="text" id="targetFirstName" autocomplete="off" oninput="updatePageTitle()"></div>
+        <div class="field"><label>מס' אישי / ת"ז:</label><input type="text" id="targetID" autocomplete="off"></div>
+        <div class="field"><label>תאריך המבחן:</label><input type="text" id="targetDate" autocomplete="off"></div>
+        <div class="field"><label>מספר רכב:</label><input type="text" id="targetCar" autocomplete="off"></div>
+        <div class="field"><label>מורה:</label><input type="text" id="targetTeacher" autocomplete="off"></div>
+    </div>
+
+    <div class="main-grid">
+        <div class="column">
+            <div class="column-title">א. שליטה ברכב</div>
+            <div id="colA"></div>
+        </div>
+        <div class="column">
+            <div class="column-title">ב. התנועה</div>
+            <div id="colB"></div>
+        </div>
+        <div class="column">
+            <div class="column-title">ג. הדרך</div>
+            <div id="colC"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <textarea id="finalNotes" class="notes-area save-state" autocomplete="off" placeholder="הערות הבוחן יופיעו כאן אוטומטית..." oninput="autoResize(this); saveDraft()"></textarea>
+
+        <div class="summary-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="fail-stamp">נכשל</div>
+                <div class="field" style="width: 60%;"><label>שם הבוחן:</label><input type="text" id="targetTester" autocomplete="off"></div>
+            </div>
+
+            <div class="digital-sig-box">
+                <canvas id="sig-canvas" width="250" height="60"></canvas>
+                <div class="no-print"><button class="clear-btn" onclick="clearSig()">נקה חתימה</button></div>
+                <div style="font-size:10px; font-weight:bold;">חתימת הבוחן</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-actions no-print">
+        <button class="btn-action btn-whatsapp" onclick="sendWhatsApp(false)">📱 שלח למורה</button>
+        <button class="btn-action btn-later" id="btnSaveLater" onclick="saveToOutbox()">⏳ שמור לשליחה מאוחרת למורה</button>
+        <button class="btn-action btn-print" onclick="window.print()">🖨️ הדפס / שמור PDF</button>
+        <button class="btn-action btn-back" onclick="safeClose()">✖ סגור וחזור</button>
+    </div>
+</div>
+
+<script>
+    const reasonsDB = {
+        "1. התחלת נסיעה": ["דימום מנוע חוזר ונשנה בתחילת נסיעה","השתהות יתר ביציאה מהמקום","התחלת נסיעה קופצנית / חוסר תאום בן מאיץ למצמד"],
+        "2. שליטה בהגה": ["אחיזת הגה שגויה / רפויה","חוסר יציבות בנתיב (זיגזג)","סטייה מנתיב ללא איתות או צורך","הפניות הגה מעבר לנדרש (היגוי יתר/חד)","תיקוני הגה מוגזמים בפניות"],
+        "3. שימוש במצמד/גלישה": ["שימוש יתר/מיותר במצמד","גלישה מסוכנת לתוך צומת","העלאת הילוך ללא הפרדה (חריקה)","רגל נחה על המצמד בזמן נסיעה"],
+        "4. החלפת הילוכים במועד": ["נסיעה בהילוך לא מתאים למהירות","איחור בהורדת הילוך בעליה/עצירה","הורדת עיניים לידית ההילוכים"],
+        "5. זינוק בעליה": ["זינוק בעליה - הדרדרות לאחור (התערבות)","חוסר שליטה בנקודת החיכוך (כיבוי מנוע)","זינוק לא זהיר / קופצני"],
+        "6. שימוש בבלם רגל/יד": ["בלימה פתאומית ללא צורך","בלימה מאוחרת מידי","אי שחרור בלם יד מלא"],
+        "7. שליטה כללית ברכב": ["חוסר ביטחון בתפעול מערכות הרכב","נהיגה מהוססת ואיטית ללא צורך","חוסר שליטה במערכות משניות (איתות/אורות/מגבים)"],
+        "8. איתות": ["אי מתן איתות בפניות / מעבר נתיב","איתות לצד הפוך","איתות מאוחר מידי / אי ביטול איתות"],
+        "9. נסיעה לאחור (חניה)": ["אובדן שליטה בנסיעה לאחור / סיכון לרכוש","חניה במקביל ללא הסתכלות במראה השמאלית","חניה בניצב ללא הסתכלות במראה השמאלית","עליה על מדרכה במהלך חניה לאחור","ביצוע חניה ללא הצלחה / זמן סביר (מיקום לקוי)","חוסר התמצאות במרחב / יותר מידי תיקונים"],
+        "10. עצירת מטרה": ["עצירה לא מדויקת בקו עצירה","גלישה מעבר לקו העצירה"],
+        "11. שימוש בבלמי האטה": ["אי שימוש בבלם עזר בירידה"],
+        "12. מחוונים ואזהרה": ["התעלמות מנורות אזהרה בלוח השעונים"],
+        "13. אביזרי בטיחות": ["אי חגירת חגורה / אי כיוון מראות ומושב"],
+        "14. נסיעה לאחור בזווית": ["סטייה מהנתיב בנסיעה לאחור"],
+        "15. התרת ורתימת גרור": ["סדר פעולות שגוי/לא בטיחותי בחיבור גרור"],
+        "1. זהירות": ["פניה בצומת קמץ ללא האטה ובדיקה מספקת (קלות ראש)","נהיגה בחוסר זהירות כללי","חוסר תשומת לב לנעשה בדרך (התערבות למניעת תאונה)"],
+        "2. הסתכלות": ["הנבחן מתקרב למעגל ויוצא ללא בדיקה לימין/מראות","חציית צמתים ללא בדיקה מוקדמת בזרועות הצומת","מבט מקובע לפנים / אי סריקת צמתים","שימוש מינימלי במראות במעבר נתיב ולקראת פניה"],
+        "3. שימוש במראות": ["פניה ימינה ללא בדיקת מראה ימנית (לפני/במהלך/אחרי)","מעבר לנתיב שמאל ללא בדיקת מראה שמאלית","אי שימוש במראות לפני בלימה/פניה"],
+        "4. השתלבות בתנועה": ["הנבחן ניסה להשתלב וגרם לרכב אחר להאט/לסטות","ניסיון להשתלב בתנועה בכביש בין-עירוני בצורה מסוכנת","השתלבות במעגל תנועה ללא התייחסות לתנועה במעגל","גרימת הפרעה לתנועה בעת השתלבות (כניסה לצומת לא פנוי)","נתיב מסתיים - אי בדיקת מראות והשתלבות מאוחרת"],
+        "5. מתן זכות קדימה": ["אי מתן זכות קדימה לרכב מימין / בדרך / בצומת","הנבחן לא מבחין בתנועה משתלבת מימין לאחר פניה שמאלה","אי מתן זכות קדימה לתנועה ממול בפניה שמאלה","אי מתן זכות קדימה בעת יציאה מחניה / רוורס"],
+        "6. מהירות": ["נסיעה במהירות מופרזת לתנאי הדרך","נסיעה במהירות שאינה תואמת לתנאי הדרך (גבוהה מדי)","נסיעה איטית מידי המעכבת תנועה"],
+        "7. קצב נסיעה": ["קצב נסיעה איטי והססני","עיכוב התנועה שלא לצורך בכביש בין עירוני"],
+        "8. שמירת רווח": ["אי שמירת רווח מרכב והתנועה ממול","הצמדות מסוכנת לרכב מלפנים (אי שמירת מרחק)","אי שמירת רווח צד בעקיפה/מפגש"],
+        "9. אומדן רוחב": ["התקרבות מסוכנת לרכב חונה מימין (התערבות)","נסיעה קרובה מידי למדרכה / אי תנועה","אומדני רוחב לקויים בדרך צרה"],
+        "10. עקיפות/נאקף": ["חוסר זהירות בעקיפה / הפרעה לתנועה ממול","עקיפת רכב עומד ללא בדיקת מראה ימנית בחזרה","לא שם לב שנעקף ולא איפשר חזרה (האצה)","עקיפה בדרך לא פנויה/מסוכנת"],
+        "11. נהיגת לילה/אורות": ["אי הדלקת אורות / סינוור רכב ממול"],
+        "12. ירידה לשול": ["ירידה מסוכנת לשול / חזרה לא זהירה לכביש"],
+        "1. פניות ימינה": ["פניה ימינה בקשת רחבה וגלישה לנתיב נגדי (התערבות)","עליה על מדרכה בפניה ימינה","כניסה לנתיב לא נכון בפניה","פניה ימינה שלא עפ\"י הסימון בדרך"],
+        "2. פניות שמאלה": ["ניסיון פניה שמאלה לנתיב הנגדי (התערבות)","פניה שמאלה בקשת קצרה מידי (סיכון אי תנועה/תמרור)","עליה על אי תנועה בפניה שמאלה","פניה שמאלה לחד סטרי - לא לנתיב השמאלי","פניה שמאלה מחד סטרי - לא מהצד השמאלי","ניסיון לפנות שמאלה מנתיב לא נכון"],
+        "3. מיקום במפגשים": ["חציית צומת בחוסר זהירות ללא בקרה מספקת","חוסר ידע בסדרי תנועה בצומת (זכות קדימה)","כניסה לצומת לא פנוי (חסימת התנועה)","עצירה בתוך הצומת"],
+        "4. משמעת בנתיבים": ["מעבר נתיב ללא בקרה (גרימת הפרעה)","עזיבת נתיב הימין ללא צורך (נסיעה בשמאל)","הנבחן לא חוזר לנתיב הימני לאחר פניה/עקיפה","משמעת נתיבים לקויה במעגל תנועה","סטייה מנתיב הנסיעה / נסיעה על קו ההפרדה"],
+        "5. ציות לתמרורים": ["אי עצירה בתמרור עצור (התערבות)","אי ציות לתמרור אין כניסה / חץ נתיב"],
+        "6. ציות לרמזורים": ["ניסיון לעבור צומת באור אדום (התערבות)","חציית קו עצירה באור אדום/צהוב"],
+        "7. נסיעה בימין הדרך": ["אי היצמדות לימין בכביש דו-סטרי","נסיעה בנתיב שמאלי שלא לצורך עקיפה"],
+        "8. דרך שאינה עירונית": ["נהיגה לא מותאמת לדרך בין-עירונית (מהירות/מיקום)"],
+        "9. התייחסות להולכי רגל": ["חוסר זהירות בהתקרבות למעבר חציה","אי מתן זכות קדימה להולך רגל במעבר חציה (התערבות)","עצירה בתחום מעבר החציה"],
+        "10. נתיב האצה/האטה": ["כניסה לא זהירה מנתיב האצה","בלימה בנתיב נסיעה לפני כניסה לנתיב האטה"],
+        "11. נהיגה בדרך צרה": ["ניסיון פניה שמאלה לנתיב נגדי בדרך צרה (התערבות)","חוסר זהירות במפגש עם רכב ממול בדרך צרה"],
+        "12. כביש רטוב": ["נסיעה מהירה מידי לתנאי האחיזה"]
+    };
+
+    const dataA = Object.keys(reasonsDB).slice(0, 15);
+    const dataB = Object.keys(reasonsDB).slice(15, 27);
+    const dataC = Object.keys(reasonsDB).slice(27);
+
+    // מזהה ייחודי לשמירת טיוטה (לפי ת.ז)
+    let draftKey = '';
+
+    function resetAllFields() {
+        // איפוס מוחלט של כל הטופס
+        document.querySelectorAll('input[type="text"], input[type="time"], textarea').forEach(el => { el.value = ''; el.setAttribute('value', ''); });
+        document.querySelectorAll('input[type="checkbox"]').forEach(el => { el.checked = false; });
+        document.querySelectorAll('.score-select').forEach(sel => { sel.selectedIndex = 0; });
+        document.querySelectorAll('.reason-select').forEach(sel => { sel.selectedIndex = 0; sel.style.display = 'none'; });
+        document.querySelectorAll('.visual-box').forEach(box => { box.innerHTML = ''; });
+        draftKey = '';
+        try { clearSig(); } catch(e) {}
+    }
+
+    function fillFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        const fields = {
+            'school': 'targetSchool', 'id': 'targetID', 'car': 'targetCar',
+            'date': 'targetDate', 'tester': 'targetTester', 'teacher': 'targetTeacher'
+        };
+        for(let key in fields) {
+            if(urlParams.has(key)) document.getElementById(fields[key]).value = urlParams.get(key);
+        }
+
+        if(urlParams.has('name')) {
+            const fullName = urlParams.get('name').trim();
+            const idx = fullName.indexOf(' ');
+            if (idx > 0) {
+                document.getElementById('targetFirstName').value = fullName.substring(0, idx);
+                document.getElementById('targetLastName').value = fullName.substring(idx + 1);
+            } else {
+                document.getElementById('targetFirstName').value = fullName;
+            }
+            updatePageTitle();
+        } else {
+            document.title = 'טופס כישלון - טסט פנימי';
+        }
+
+        // שמירת טיוטה לפי שם הנבחן
+        const draftName = urlParams.get('name') || '';
+        if(draftName.trim()) {
+            draftKey = 'draft_' + draftName.trim();
+            // שחזור טיוטה רק אם הגיעו עם פרמטר restore=1
+            if(urlParams.get('restore') === '1') {
+                restoreDraft();
+            }
+        }
+    }
+
+    window.onload = function() {
+        // בונה את הטורים
+        renderColumn('colA', dataA);
+        renderColumn('colB', dataB);
+        renderColumn('colC', dataC);
+
+        // איפוס ומילוי מה-URL
+        resetAllFields();
+        fillFromUrl();
+
+        // מעקב אחרי שינויים לשמירה
+        document.querySelectorAll('input, textarea, select').forEach(el => {
+            el.addEventListener('change', saveDraft);
+            el.addEventListener('input', saveDraft);
+        });
+    };
+
+    // פונקציית חזרה חכמה - חוזר לטסט פנימי
+    function goBack() {
+        const dashboard = window.open('', 'internal_test_dashboard');
+        if (dashboard && dashboard.location.href !== 'about:blank') {
+            dashboard.focus();
+        } else {
+            window.open('internal_test.html', 'internal_test_dashboard');
+        }
+    }
+
+    // פונקציית סגירה בטוחה - חוזר לטסט פנימי
+    function safeClose() {
+        saveDraft(); // שמירה אחרונה
+
+        // נסיון למצוא את החלון הראשי ולהתמקד בו
+        const dashboard = window.open('', 'internal_test_dashboard');
+        if (dashboard && dashboard.location.href !== 'about:blank') {
+            dashboard.focus();
+        }
+
+        // סגירת החלון הנוכחי
+        window.close();
+
+        // אם הסגירה נחסמה ע"י הדפדפן, ננווט חזרה לטסט פנימי
+        if (!window.closed) {
+            window.location.href = 'internal_test.html';
+        }
+    }
+
+    function saveDraft() {
+        if(!draftKey) return;
+        const data = { scores: {}, reasons: {}, notes: document.getElementById('finalNotes').value, vehicleTypes: {} };
+
+        document.querySelectorAll('.score-select').forEach((sel, i) => { if(sel.value) data.scores[i] = sel.value; });
+        document.querySelectorAll('.save-state[type="checkbox"]').forEach(cb => { data.vehicleTypes[cb.id] = cb.checked; });
+
+        localStorage.setItem(draftKey, JSON.stringify(data));
+    }
+
+    function restoreDraft() {
+        if(!draftKey) return;
+        const data = JSON.parse(localStorage.getItem(draftKey));
+        if(!data) return;
+
+        if(data.notes) document.getElementById('finalNotes').value = data.notes;
+
+        // שחזור ציונים
+        const selects = document.querySelectorAll('.score-select');
+        if(data.scores) {
+            Object.keys(data.scores).forEach(idx => {
+                if(selects[idx]) {
+                    selects[idx].value = data.scores[idx];
+                    markIcon(selects[idx]);
+                }
+            });
+        }
+
+        // שחזור סוגי רכב
+        if(data.vehicleTypes) {
+            Object.keys(data.vehicleTypes).forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.checked = data.vehicleTypes[id];
+            });
+        }
+    }
+
+    function renderColumn(id, list) {
+        const container = document.getElementById(id);
+        list.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'row-item';
+            let options = `<option value="">בחר פירוט...</option>`;
+            if (reasonsDB[item]) {
+                reasonsDB[item].forEach(reason => { options += `<option value="${reason}">${reason}</option>`; });
+            }
+            div.innerHTML = `
+                <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+                    <span class="label-text">${item}</span>
+                    <select class="reason-select" onchange="toggleReason(this, '${item}')">
+                        ${options}<option value="אחר">הקלדה ידנית / אחר</option>
+                    </select>
+                </div>
+                <select class="score-select no-print" onchange="markIcon(this); saveDraft()">
+                    <option value="">בחר</option><option value="v">טוב (✓)</option><option value="x">רע (X)</option><option value="ox">הפקעה (⊗)</option>
+                </select>
+                <div class="visual-box"></div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function markIcon(sel) {
+        const box = sel.nextElementSibling;
+        const rowItem = sel.parentElement;
+        const reasonSelect = rowItem.querySelector('.reason-select');
+        const val = sel.value;
+        box.innerHTML = '';
+        if (val === 'v') {
+            box.innerHTML = '<span class="v-mark">✓</span>';
+            reasonSelect.style.display = 'none'; reasonSelect.value = "";
+        } else if (val === 'x') {
+            box.innerHTML = '<span class="x-mark">✕</span>';
+            reasonSelect.style.display = 'block';
+        } else if (val === 'ox') {
+            box.innerHTML = '<div class="ox-mark">✕</div>';
+            reasonSelect.style.display = 'block';
+        } else {
+            reasonSelect.style.display = 'none'; reasonSelect.value = "";
+        }
+    }
+
+    function toggleReason(selectElem, category) {
+        const val = selectElem.value;
+        if (!val) return;
+
+        const rawLabel = selectElem.parentElement.querySelector('.label-text').innerText;
+        const cleanLabel = rawLabel.replace(/^\d+\.\s*/, '');
+
+        let formattedReason = "";
+        if (val === "אחר") formattedReason = `• ${cleanLabel}: `;
+        else formattedReason = `• ${cleanLabel}: ${val}`;
+
+        const notesArea = document.getElementById('finalNotes');
+        let currentText = notesArea.value;
+
+        if (currentText.includes(formattedReason)) {
+            currentText = currentText.replace(formattedReason + '\n', '');
+            currentText = currentText.replace(formattedReason, '');
+        } else {
+            if(currentText && !currentText.endsWith('\n')) currentText += '\n';
+            currentText += formattedReason + '\n';
+        }
+
+        notesArea.value = currentText;
+        selectElem.value = "";
+        autoResize(notesArea);
+        saveDraft();
+    }
+
+    function autoResize(textarea) {
+        textarea.style.height = 'auto'; textarea.style.height = (textarea.scrollHeight + 5) + 'px';
+    }
+
+    // קטגוריות טופס כישלון - לפי הסדר בטופס
+    const failCategories = [
+        // A - שליטה ברכב (15)
+        'התחלת נסיעה','שליטה בהגה','שימוש במצמד/גלישה','החלפת הילוכים במועד','זינוק בעליה',
+        'שימוש בבלם רגל/יד','שליטה כללית ברכב','איתות','נסיעה לאחור (חניה)','עצירת מטרה',
+        'שימוש בבלמי האטה','מחוונים ואזהרה','אביזרי בטיחות','נסיעה לאחור בזווית','התרת ורתימת גרור',
+        // B - התנועה (12)
+        'זהירות','הסתכלות','שימוש במראות','השתלבות בתנועה','מתן זכות קדימה',
+        'מהירות','קצב נסיעה','שמירת רווח','אומדן רוחב','עקיפות/נאקף',
+        'נהיגת לילה/אורות','ירידה לשול',
+        // C - הדרך (12)
+        'פניות ימינה','פניות שמאלה','מיקום במפגשים','משמעת בנתיבים','ציות לתמרורים',
+        'ציות לרמזורים','נסיעה בימין הדרך','דרך שאינה עירונית','התייחסות להולכי רגל',
+        'נתיב האצה/האטה','נהיגה בדרך צרה','כביש רטוב'
+    ];
+
+    function getFailReasons() {
+        const reasons = [];
+        document.querySelectorAll('.score-select').forEach((sel, i) => {
+            if(sel.value === 'x' || sel.value === 'ox') {
+                const catName = failCategories[i] || `קטגוריה ${i+1}`;
+                // שלוף גם את הפירוט הנבחר
+                const rowItem = sel.parentElement;
+                const reasonSelect = rowItem.querySelector('.reason-select');
+                const detail = (reasonSelect && reasonSelect.value && reasonSelect.value !== 'אחר') ? reasonSelect.value : '';
+                reasons.push({ name: catName, severe: sel.value === 'ox', detail: detail });
+            }
+        });
+        return reasons;
+    }
+
+    // RTL markers לוואטסאפ
+    const RLM = '\u200F';  // Right-to-Left Mark
+    const RLE = '\u202B';  // Right-to-Left Embedding
+
+    function sendWhatsApp(textOnly) {
+        const nameFirst = document.getElementById('targetFirstName').value || '';
+        const nameLast = document.getElementById('targetLastName').value || '';
+        const school = document.getElementById('targetSchool').value || '';
+        const tester = document.getElementById('targetTester').value || '';
+        const teacher = document.getElementById('targetTeacher').value || '';
+        const notes = document.getElementById('finalNotes').value || '';
+        const fullName = `${nameFirst} ${nameLast}`;
+
+        if(!fullName.trim()) { alert('אנא וודא ששם הנבחן מלא'); return; }
+        if(!teacher.trim()) { alert('אנא וודא ששם המורה מלא'); return; }
+
+        let msg = RLE + `*הודעת כישלון - טסט פנימי* ❌\n`;
+        msg += RLE + `שם הנבחן: ${fullName}\n`;
+        if(school) msg += RLE + `בי"ס: ${school}\n`;
+        if(tester) msg += RLE + `בוחן: ${tester}\n`;
+        msg += RLE + `${RLM}👨‍🏫 ${RLM}*מורה: ${teacher}*\n`;
+        msg += `----------------\n`;
+
+        // פירוט ליקויים מהציונים בטופס
+        const reasons = getFailReasons();
+        if(reasons.length > 0) {
+            msg += RLE + `*סיבות כישלון:*\n`;
+            reasons.forEach(r => {
+                if(r.severe) {
+                    msg += RLE + `${RLM}🔴 ${RLM}${r.name} (הפקעה)`;
+                } else {
+                    msg += RLE + `${RLM}⚠️ ${RLM}${r.name}`;
+                }
+                if(r.detail) msg += ` - ${r.detail}`;
+                msg += `\n`;
+            });
+            msg += `----------------\n`;
+        }
+
+        if(notes) {
+            msg += RLE + `*פירוט נוסף:*\n${notes}\n`;
+            msg += `----------------\n`;
+        }
+        msg += RLE + `תאריך: ${new Date().toLocaleDateString('he-IL')}`;
+
+        if(textOnly) return msg;
+
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+    }
+
+    // שמירה לדואר יוצא של הטסט הפנימי
+    function saveToOutbox() {
+        const msg = sendWhatsApp(true);
+        if(!msg) return;
+        const fullName = document.getElementById('targetFirstName').value + ' ' + document.getElementById('targetLastName').value;
+        const savedMessages = JSON.parse(localStorage.getItem('internal_whatsapp_outbox')) || [];
+        savedMessages.push({ name: fullName, text: msg, time: new Date().toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'}) });
+        localStorage.setItem('internal_whatsapp_outbox', JSON.stringify(savedMessages));
+
+        const btn = document.getElementById('btnSaveLater');
+        const originalText = btn.innerText;
+        btn.innerText = "✅ נשמר!";
+        btn.style.background = "#28a745";
+        setTimeout(() => { btn.innerText = originalText; btn.style.background = "#ff9800"; }, 3000);
+    }
+
+    // renderColumn נקרא מתוך fullReset ב-window.onload
+
+    const canvas = document.getElementById('sig-canvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    const getPos = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX || e.touches[0].clientX) - r.left, y: (e.clientY || e.touches[0].clientY) - r.top }; };
+    canvas.addEventListener('mousedown', (e) => { drawing = true; ctx.beginPath(); ctx.moveTo(getPos(e).x, getPos(e).y); });
+    canvas.addEventListener('mousemove', (e) => { if(!drawing)return; ctx.lineTo(getPos(e).x, getPos(e).y); ctx.stroke(); });
+    canvas.addEventListener('mouseup', () => { drawing = false; });
+    canvas.addEventListener('touchstart', (e) => { drawing = true; ctx.beginPath(); ctx.moveTo(getPos(e).x, getPos(e).y); e.preventDefault(); });
+    canvas.addEventListener('touchmove', (e) => { if(!drawing)return; ctx.lineTo(getPos(e).x, getPos(e).y); ctx.stroke(); e.preventDefault(); });
+    canvas.addEventListener('touchend', () => { drawing = false; });
+    function clearSig() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+    function updatePageTitle() {
+        const first = document.getElementById('targetFirstName').value;
+        const last = document.getElementById('targetLastName').value;
+        if(first || last) document.title = "כישלון פנימי - " + first + " " + last;
+    }
+</script>
+
+</body>
+</html>
