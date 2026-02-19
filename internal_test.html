@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>טסט פנימי</title>
+    <style>
+        body { background-color: #525659; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .a4-page { background-color: white; width: 210mm; min-height: 297mm; padding: 10mm; box-shadow: 0 0 15px rgba(0,0,0,0.5); box-sizing: border-box; position: relative; }
+
+        @media screen {
+            .a4-page { width: 100%; max-width: 210mm; height: auto; min-height: auto; padding: 10px; }
+            .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 10px; }
+            table { min-width: 600px; }
+        }
+
+        .settings-panel { background: #fff3e0; border: 1px solid #ffb74d; padding: 10px; margin-bottom: 20px; border-radius: 5px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; direction: rtl; }
+        .settings-panel input, .settings-panel select { width: 100%; padding: 6px; font-size: 14px; font-weight: bold; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .settings-title { grid-column: span 3; font-weight: bold; text-align: center; color: #e65100; margin-bottom: 5px; }
+        .header-section { text-align: center; margin-bottom: 10px; }
+        .main-title { font-size: 20px; margin: 0; font-weight: normal; white-space: pre-wrap; word-spacing: normal; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 5px; direction: rtl; table-layout: fixed; }
+        th, td { border: 1px solid #000; padding: 2px; text-align: center; font-size: 11px; vertical-align: middle; height: 30px; }
+        thead th { background-color: #e7e6e6; font-weight: bold; height: auto; padding: 1px 2px; white-space: normal; font-size: 10px; line-height: 1.1; }
+
+        input.tbl-input, select.tbl-input { width: 100%; border: none; background: transparent; text-align: center; font-size: 12px; outline: none; font-family: inherit; padding: 0; margin: 0; height: 100%; display: block; }
+        select.tbl-input { -webkit-appearance: none; appearance: none; cursor: pointer; }
+
+        .school-wrapper { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        input.other-input { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; border: 2px solid #007bff; text-align: center; font-size: 12px; z-index: 10; box-sizing: border-box; }
+        .btn-clear-other { display: none; position: absolute; left: 2px; top: 50%; transform: translateY(-50%); background: #ccc; border: none; font-size: 10px; cursor: pointer; z-index: 11; padding: 2px 5px; border-radius: 50%; }
+
+        /* teacher wrapper - same pattern as school */
+        .teacher-wrapper { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        input.teacher-other-input { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; border: 2px solid #e65100; text-align: center; font-size: 12px; z-index: 10; box-sizing: border-box; }
+        .btn-clear-teacher { display: none; position: absolute; left: 2px; top: 50%; transform: translateY(-50%); background: #ccc; border: none; font-size: 10px; cursor: pointer; z-index: 11; padding: 2px 5px; border-radius: 50%; }
+
+        .btn-open-form { background: #ffc107; border: 1px solid #d39e00; color: black; font-size: 10px; cursor: pointer; padding: 2px 5px; border-radius: 3px; margin-right: 5px; display: none; }
+
+        .general-notes-box { border: 1px solid #000; padding: 5px; min-height: 50px; margin-top: 10px; display: flex; flex-direction: column; }
+        #generalNotes { width: 100%; border: none; resize: none; font-family: inherit; font-size: 12px; background: transparent; outline: none; overflow: hidden; min-height: 25px; }
+
+        .main-buttons { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; direction: rtl; }
+        .main-buttons button { padding: 8px 15px; font-size: 13px; }
+        button { border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 12px; }
+        .btn-print { background-color: #007bff; }
+        .btn-reset { background-color: #dc3545; }
+        .btn-pass-list { background-color: #17a2b8; }
+
+        #outbox-section, #pass-list-section { margin-top: 20px; border-top: 2px dashed #999; padding-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 5px; }
+        .outbox-item { background: #fff; border: 1px solid #ddd; padding: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
+        .outbox-btn-group button { margin-left: 5px; padding: 4px 8px; border: none; border-radius: 3px; cursor: pointer; color: white; font-size: 12px; }
+        .btn-whatsapp { background: #25D366; color: white; margin-bottom: 5px; width: 100%; text-align: center; padding: 10px; font-size: 14px; }
+        .btn-delete { background: #dc3545; }
+
+        @media print {
+            body { background: white; padding: 0; margin: 0; }
+            .main-buttons, .settings-panel, #pass-list-section, #outbox-section, .btn-pass-list, .btn-open-form { display: none !important; }
+            .a4-page { box-shadow: none; margin: 0; width: 210mm; height: 297mm; padding: 10mm; overflow: hidden; }
+            .table-responsive { overflow: visible; display: block; }
+            table { min-width: 100%; width: 100%; }
+            td, th { height: 22px; padding: 0; }
+            .school-select.hidden-print { display: none; }
+            input.other-input.visible-print { display: block; border: none; font-weight: bold; text-align: center;}
+            .btn-clear-other { display: none; }
+            .teacher-select.hidden-print { display: none; }
+            input.teacher-other-input.visible-print { display: block; border: none; font-weight: bold; text-align: center;}
+            .btn-clear-teacher { display: none; }
+            .no-print { display: none !important; }
+        }
+
+        @media screen and (max-width: 768px) {
+            body { flex-direction: column; align-items: center; padding: 0; }
+            .main-buttons { flex-wrap: wrap; gap: 5px; }
+            .main-buttons button { padding: 8px 12px; font-size: 12px; }
+            .a4-page { width: 100%; margin: 0; border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="a4-page">
+    <div class="main-buttons">
+        <button class="btn-print" onclick="saveWithSmartName()">🖨️ שמור PDF</button>
+        <button class="btn-reset" onclick="resetForm()">🔄 נקה הכל</button>
+        <button class="btn-pass-list" onclick="generatePassList()">🏆 צור רשימת עוברים</button>
+    </div>
+    <div class="settings-panel">
+        <div class="settings-title">הגדרות טסט פנימי</div>
+        <div><label>יום:</label><select id="daySelect" onchange="saveHeader()"><option>א</option><option>ב</option><option>ג</option><option>ד</option><option>ה</option></select></div>
+        <div><label>תאריך:</label><input type="text" id="dateInput" placeholder="dd/mm/yy" oninput="saveHeader()"></div>
+        <div><label>אזור:</label><select id="areaSelect" onchange="handleAreaChange()"><option value="">בחר אזור...</option></select></div>
+    </div>
+
+    <div class="header-section">
+        <h1 class="main-title" id="dynamicTitle">טסט פנימי ליום ...</h1>
+    </div>
+
+    <div style="text-align: right; font-weight: bold; margin: 15px 0 5px 0; border-bottom: 1px solid #000; font-size: 13px;">פירוט נבחנים:</div>
+
+    <div class="table-responsive">
+        <table>
+            <colgroup>
+                <col style="width: 4%;"> <col style="width: 14%;"> <col style="width: 7%;"> <col style="width: 10%;"> <col style="width: 16%;"> <col style="width: 5%;"> <col style="width: 8%;"> <col style="width: 12%;"> <col style="width: 6%;"> <col style="width: 10%;">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>מס'</th><th>שם ביה"ס</th><th>מס' רכב</th><th>ת.ז</th><th>שם הנבחן</th><th>דרגה</th><th>אוכלוסיה</th><th>מורה</th><th>מבחן</th><th>תוצאה</th>
+                </tr>
+            </thead>
+            <tbody id="examTableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="general-notes-box">
+        <strong style="font-size: 12px;">הערות כלליות:</strong>
+        <textarea id="generalNotes" rows="1" oninput="saveNotes(); autoResize(this)"></textarea>
+    </div>
+
+    <div style="margin-top: 10px; border: 2px solid #e65100; border-radius: 5px; padding: 10px; background: #fff3e0; display: flex; gap: 15px; align-items: flex-start;">
+        <div style="flex: 1;">
+            <label style="font-weight:bold; color:#e65100; font-size:12px;">בוחן טסט פנימי:</label>
+            <input type="text" id="internalTesterName" style="width:100%; padding:5px; font-size:13px; font-weight:bold; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;" oninput="saveInternalTester()">
+        </div>
+        <div style="flex: 1; border: 1px dashed #e65100; padding: 5px; background: #fff; text-align:center;">
+            <canvas id="internal-sig-canvas" width="250" height="60" style="cursor:crosshair; display:block; margin:0 auto;"></canvas>
+            <div class="no-print"><button onclick="clearInternalSig()" style="background:#eee; border:1px solid #ccc; font-size:10px; padding:2px 5px; cursor:pointer; margin-top:2px; width:100%;">נקה חתימה</button></div>
+            <div style="font-size:10px; font-weight:bold; color:#e65100;">חתימת בוחן טסט פנימי</div>
+        </div>
+    </div>
+
+    <div id="pass-list-section" class="no-print" style="display:none;">
+        <h3 style="margin:0 0 10px 0; font-size:14px;">🏆 הודעות עוברים (לפי מורה)</h3>
+        <div id="pass-list-buttons"></div>
+    </div>
+
+    <div id="outbox-section" class="no-print">
+        <h3 style="margin:0 0 10px 0; font-size:14px;">📬 דואר יוצא</h3>
+        <div id="outbox-list"></div>
+        <div style="text-align:center; margin-top:10px;">
+            <button onclick="clearOutbox()" style="background:#555;">נקה היסטוריה</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.name = "internal_test_dashboard";
+    const LS_PREFIX = 'internal_';
+    const TESTER_NAME = 'שלום מזרחי';
+
+    const schoolMap = {
+        "באר שבע": ["שרייבר", "יובלי", "על גלגלים", "יחד", "איציק", "ב.ה 6930", "ליין בהד 6", "איחוד", "חה\"א"],
+        "אופקים": ["ב.ה 6930", "אופקים", "שי אופקים"],
+        "נתיבות": ["שי אופקים", "נתיבות"],
+        "דימונה": ["על גלגלים", "דימונה", "עיון"],
+        "אשקלון": ["איחוד", "אשקלון", "ב.ה 6930"],
+        "קרית גת": ["דני", "קרית גת"],
+        "אשדוד": ["זהב", "אשדוד"],
+        "לוד": ["ב.ה 6920", "איילון", "יובלי", "על גלגלים"],
+        "בית נבאללה": ["ב.ה 6920", "עיון", "בית נבאללה"],
+        "שוהם": ["ב.ה 6920"],
+        "צריפין": ["בהד 6", "רישוי"],
+        "רחובות": ["יובלי", "רחובות"],
+        "ראשון לציון": ["שער ראשון", "שרייבר", "שרייבר אופנועים"],
+        "יפו": ["א.סלע", "יחדיו", "רישוי", "שרייבר", "איחוד", "יפו עיוני"],
+        "תל אביב": ["איחוד", "שרייבר"],
+        "פתח תקווה": ["קרן", "אדי", "שרייבר", "טל", "אדר"],
+        "הדר יוסף": ["גולן", "גור אריה", "שרייבר"],
+        "נתניה": ["אורן תמיר", "שגיא", "שרייבר"],
+        "חדרה": ["אוטו", "נתיב", "שרייבר"],
+        "כפר סבא": ["שרייבר", "טוב", "הדרכים"],
+        "חיפה": ["נתיב", "אומן", "חיפה", "ב.ה 6910"],
+        "קרית חיים": ["הקריה", "גל ירוק"],
+        "עכו": ["ארגמן", "סמיר", "נתיבי הגליל"],
+        "עפולה": ["החמישה", "לין", "ב.ה 6910", "יהב", "שרייבר"],
+        "בית שאן": ["גלבוע"],
+        "טבריה": ["האון"],
+        "קרית שמונה": ["רוממה גליל", "נמרוד סער"],
+        "ירושלים": ["שרייבר", "דרכים", "לג ירושלים", "על גלגלים", "עוז"],
+        "בהלץ": ["טרקטור עיוני", "טרקטור מעשי", "בהד 14"],
+        "לג תלש": ["תלש עיוני"],
+        "ביסט 21": ["ביסט"]
+    };
+
+    // רשימת מורים
+    const teachersList = ["גדז'", "גיא", "רוני", "טריף", "סיתאוי", "יוסי", "אביחי", "מרק"];
+
+    const vehicleTypes = ['','1','A1','A','B','C1','C','E','D'];
+    const popTypes = ['','קד"צ','ואוצ\'ר','צבא','פרטי/אחר'];
+
+    window.onload = function() {
+        initAreaSelect();
+        const savedAreaIdx = localStorage.getItem(LS_PREFIX + 'header_area_idx');
+        if(savedAreaIdx) document.getElementById('areaSelect').selectedIndex = savedAreaIdx;
+        handleAreaChange(false);
+        if(localStorage.getItem(LS_PREFIX + 'header_day')) document.getElementById('daySelect').value = localStorage.getItem(LS_PREFIX + 'header_day');
+        if(localStorage.getItem(LS_PREFIX + 'header_date')) document.getElementById('dateInput').value = localStorage.getItem(LS_PREFIX + 'header_date');
+        if(localStorage.getItem(LS_PREFIX + 'general_notes')) {
+            const notesEl = document.getElementById('generalNotes');
+            notesEl.value = localStorage.getItem(LS_PREFIX + 'general_notes');
+            autoResize(notesEl);
+        }
+        updateHeader();
+        initExamTable();
+        loadExamData();
+        renderOutbox();
+        loadInternalTester();
+    };
+
+    function autoResize(textarea) { textarea.style.height = 'auto'; textarea.style.height = (textarea.scrollHeight + 5) + 'px'; }
+
+    function getTeacherOptions() {
+        return '<option value=""></option>' + teachersList.map(t => `<option value="${t}">${t}</option>`).join('') + '<option value="__other__">אחר...</option>';
+    }
+
+    function createTeacherCell() {
+        const opts = getTeacherOptions();
+        return `<div class="teacher-wrapper"><select class="tbl-input teacher-select exam-input" onchange="toggleTeacherInput(this)">${opts}</select><button class="btn-clear-teacher" onclick="clearTeacherInput(this)">✖</button><input type="text" class="tbl-input teacher-other-input exam-input" placeholder="שם מורה..." oninput="saveExamData()"></div>`;
+    }
+
+    function toggleTeacherInput(selectElem) {
+        const wrapper = selectElem.closest('.teacher-wrapper');
+        const inputElem = wrapper.querySelector('.teacher-other-input');
+        const clearBtn = wrapper.querySelector('.btn-clear-teacher');
+        if(selectElem.value === '__other__') {
+            inputElem.style.display = 'block';
+            selectElem.classList.add('hidden-print');
+            inputElem.classList.add('visible-print');
+            clearBtn.style.display = 'block';
+            inputElem.focus();
+        } else {
+            inputElem.style.display = 'none';
+            inputElem.value = '';
+            selectElem.classList.remove('hidden-print');
+            inputElem.classList.remove('visible-print');
+            clearBtn.style.display = 'none';
+        }
+        saveExamData();
+    }
+
+    function clearTeacherInput(btn) {
+        const wrapper = btn.closest('.teacher-wrapper');
+        const sel = wrapper.querySelector('.teacher-select');
+        const inp = wrapper.querySelector('.teacher-other-input');
+        sel.value = ''; inp.value = '';
+        toggleTeacherInput(sel);
+        saveExamData();
+    }
+
+    function getTeacherValue(row) {
+        const sel = row.querySelector('.teacher-select');
+        if(!sel) return '';
+        if(sel.value === '__other__') {
+            return row.querySelector('.teacher-other-input')?.value.trim() || '';
+        }
+        return sel.value;
+    }
+
+    function initExamTable() {
+        const examBody = document.getElementById('examTableBody');
+        examBody.innerHTML = '';
+        const typeOptions = vehicleTypes.map(v => `<option value="${v}">${v}</option>`).join('');
+        const popOptions = popTypes.map(v => `<option value="${v}">${v}</option>`).join('');
+        let testNumOptions = '<option></option>';
+        for(let j=1; j<=10; j++) testNumOptions += `<option>${j}</option>`;
+
+        for(let i=1; i<=10; i++) {
+            const rowHtml = `<tr>
+                <td>${i}</td>
+                <td>${createSchoolCell()}</td>
+                <td><input class="tbl-input exam-input" placeholder="מס' רכב"></td>
+                <td><input class="tbl-input exam-input"></td>
+                <td><input class="tbl-input exam-input"></td>
+                <td><select class="tbl-input exam-input grade-select">${typeOptions}</select></td>
+                <td><select class="tbl-input exam-input">${popOptions}</select></td>
+                <td>${createTeacherCell()}</td>
+                <td><select class="tbl-input exam-input">${testNumOptions}</select></td>
+                <td>
+                    <div style="display:flex; align-items:center; justify-content:center;">
+                        <button class="btn-open-form" onclick="openFailForm(this)" title="פתח טופס קיים">📝</button>
+                        <select class="tbl-input exam-input result-select" onchange="checkFail(this)">
+                            <option></option><option>עבר</option><option value="נכשל">נכשל</option>
+                        </select>
+                    </div>
+                </td>
+            </tr>`;
+            examBody.insertAdjacentHTML('beforeend', rowHtml);
+        }
+        refreshAllSchoolSelects();
+        bindEvents();
+    }
+
+    function bindEvents() {
+        document.querySelectorAll('.exam-input').forEach(el => el.addEventListener('input', saveExamData));
+        document.querySelectorAll('.school-select').forEach(el => el.addEventListener('change', (e) => {
+            toggleOtherInput(e.target); saveExamData();
+        }));
+        document.querySelectorAll('.school-other').forEach(el => el.addEventListener('input', saveExamData));
+    }
+
+    function saveExamData() {
+        const inputs = document.querySelectorAll('#examTableBody input, #examTableBody select');
+        localStorage.setItem(LS_PREFIX + 'data_exam_table', JSON.stringify(Array.from(inputs).map(el => el.value)));
+    }
+    function saveHeader() {
+        updateHeader();
+        localStorage.setItem(LS_PREFIX + 'header_day', document.getElementById('daySelect').value);
+        localStorage.setItem(LS_PREFIX + 'header_date', document.getElementById('dateInput').value);
+    }
+    function saveNotes() { localStorage.setItem(LS_PREFIX + 'general_notes', document.getElementById('generalNotes').value); }
+
+    function loadExamData() {
+        const examData = JSON.parse(localStorage.getItem(LS_PREFIX + 'data_exam_table'));
+        if(examData) {
+            const examInputs = document.querySelectorAll('#examTableBody input, #examTableBody select');
+            examInputs.forEach((el, i) => {
+                if(i < examData.length) {
+                    el.value = examData[i];
+                    if(el.classList.contains('school-select') && el.value === 'other') toggleOtherInput(el);
+                    if(el.classList.contains('teacher-select') && el.value === '__other__') toggleTeacherInput(el);
+                    if(el.classList.contains('result-select') && el.value === 'נכשל') el.previousElementSibling.style.display = 'inline-block';
+                }
+            });
+        }
+    }
+
+    function initAreaSelect() {
+        const sel = document.getElementById('areaSelect');
+        sel.innerHTML = '<option value="">בחר אזור...</option>';
+        Object.keys(schoolMap).sort().forEach(area => { sel.innerHTML += `<option value="${area}">${area}</option>`; });
+        sel.innerHTML += `<option value="other">אחר...</option>`;
+    }
+
+    function handleAreaChange(save = true) {
+        if(save) { updateHeader(); localStorage.setItem(LS_PREFIX + 'header_area_idx', document.getElementById('areaSelect').selectedIndex); }
+        refreshAllSchoolSelects();
+    }
+
+    function refreshAllSchoolSelects() {
+        const selectedArea = document.getElementById('areaSelect').value;
+        const schools = schoolMap[selectedArea] || [];
+        let opts = '<option value=""></option>';
+        schools.forEach(s => opts += `<option value="${s}">${s}</option>`);
+        opts += '<option value="other">אחר...</option>';
+        document.querySelectorAll('.school-select').forEach(selectElem => {
+            const cv = selectElem.value;
+            selectElem.innerHTML = opts;
+            if(cv && (schools.includes(cv) || cv === 'other')) selectElem.value = cv;
+            else selectElem.value = "";
+            toggleOtherInput(selectElem);
+        });
+    }
+
+    function toggleOtherInput(selectElem) {
+        const inputElem = selectElem.nextElementSibling.nextElementSibling;
+        const clearBtn = selectElem.nextElementSibling;
+        if(selectElem.value === 'other') {
+            inputElem.style.display = 'block'; selectElem.classList.add('hidden-print'); inputElem.classList.add('visible-print'); clearBtn.style.display = 'block';
+        } else {
+            inputElem.style.display = 'none'; selectElem.classList.remove('hidden-print'); inputElem.classList.remove('visible-print'); clearBtn.style.display = 'none';
+        }
+    }
+
+    function clearOtherInput(btn) {
+        const w = btn.parentElement; const s = w.querySelector('.school-select'); const inp = w.querySelector('.school-other');
+        s.value = ""; inp.value = ""; toggleOtherInput(s); saveExamData();
+    }
+
+    function createSchoolCell() {
+        return `<div class="school-wrapper"><select class="tbl-input school-select exam-input" style="text-align:right;" onchange="toggleOtherInput(this)"><option value=""></option></select><button class="btn-clear-other" onclick="clearOtherInput(this)">✖</button><input type="text" class="tbl-input other-input school-other exam-input" placeholder="הקלד שם..." oninput="saveExamData()"></div>`;
+    }
+
+    function getRowData(selectElem) {
+        const row = selectElem.closest('tr');
+        const cells = row.querySelectorAll('td');
+        const ss = row.querySelector('.school-select'), so = row.querySelector('.school-other');
+        const schoolVal = (ss.value === 'other') ? so.value : ss.value;
+        const carVal = cells[2]?.querySelector('input')?.value || '';
+        const idVal = cells[3]?.querySelector('input')?.value || '';
+        const nameVal = cells[4]?.querySelector('input')?.value || '';
+        const dateVal = document.getElementById('dateInput').value || '';
+        const teacherVal = getTeacherValue(row);
+        return { name: nameVal, id: idVal, car: carVal, school: schoolVal, date: dateVal, tester: TESTER_NAME, teacher: teacherVal };
+    }
+
+    function buildFailUrl(data, restore) {
+        let url = `driving_test_internal.html?name=${encodeURIComponent(data.name)}&id=${encodeURIComponent(data.id)}&car=${encodeURIComponent(data.car)}&school=${encodeURIComponent(data.school)}&date=${encodeURIComponent(data.date)}&tester=${encodeURIComponent(data.tester)}&teacher=${encodeURIComponent(data.teacher)}&_t=${Date.now()}`;
+        if(restore) url += '&restore=1';
+        return url;
+    }
+
+    // פותח טופס כישלון בחלון אחד קבוע - מנווט ל-about:blank קודם כדי להכריח טעינה מלאה
+    function openFailWindow(url) {
+        const w = window.open('about:blank', 'internal_fail_form');
+        if(w) {
+            setTimeout(function() { w.location.href = url; w.focus(); }, 50);
+        }
+    }
+
+    function checkFail(selectElem) {
+        saveExamData();
+        const btn = selectElem.previousElementSibling;
+        if(selectElem.value === 'נכשל') {
+            btn.style.display = 'inline-block';
+            const data = getRowData(selectElem);
+            openFailWindow(buildFailUrl(data, false));
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    function openFailForm(btn) {
+        // כפתור 📝 = פתח טופס קיים עם שחזור טיוטה
+        const selectElem = btn.nextElementSibling;
+        if(selectElem.value === 'נכשל') {
+            const data = getRowData(selectElem);
+            openFailWindow(buildFailUrl(data, true));
+        }
+    }
+
+    function updateHeader() {
+        const day = document.getElementById('daySelect').value;
+        const date = document.getElementById('dateInput').value;
+        const as = document.getElementById('areaSelect');
+        const area = as.options[as.selectedIndex] ? as.options[as.selectedIndex].text : '';
+        const displayArea = (area === 'בחר אזור...' || !area) ? '_______' : area;
+        const nbsp = (str) => str.replace(/ /g, '\u00A0');
+        document.getElementById('dynamicTitle').innerHTML = nbsp(`טסט פנימי ליום ${day} לתאריך ${date} לאזור ${displayArea}`);
+    }
+
+    // ============ רשימת עוברים ============
+    function generatePassList() {
+        const rows = document.querySelectorAll('#examTableBody tr');
+        const date = document.getElementById('dateInput').value || 'היום';
+        const as = document.getElementById('areaSelect');
+        const area = as.options[as.selectedIndex].text;
+        const passByTeacher = {};
+
+        rows.forEach(row => {
+            const ss = row.querySelector('.school-select'), so = row.querySelector('.school-other');
+            const schoolName = ((ss.value === 'other') ? so.value : ss.value).trim();
+            const cells = row.querySelectorAll('td');
+            const nameInput = cells[4]?.querySelector('input');
+            const studentName = nameInput ? nameInput.value.trim() : '';
+            const teacherName = getTeacherValue(row);
+            const resultSelect = row.querySelector('.result-select');
+            const result = resultSelect ? resultSelect.value : '';
+
+            if(!studentName) return;
+
+            if(result === 'עבר' && schoolName) {
+                const key = teacherName || 'ללא מורה';
+                if(!passByTeacher[key]) passByTeacher[key] = [];
+                passByTeacher[key].push({ name: studentName, school: schoolName });
+            }
+        });
+
+        const passDiv = document.getElementById('pass-list-buttons');
+        passDiv.innerHTML = '';
+
+        // RTL markers
+        const RLM = '\u200F';
+        const RLE = '\u202B';
+
+        // רשימות עוברים לפי מורה
+        if(Object.keys(passByTeacher).length > 0) {
+            for(const [teacher, students] of Object.entries(passByTeacher)) {
+                let msg = RLE + `*רשימת עוברים - טסט פנימי*\n`;
+                msg += RLE + `${RLM}📅 ${RLM}*${date} - ${area}*\n`;
+                msg += RLE + `${RLM}👮‍♂️ ${RLM}*בוחן: ${TESTER_NAME}*\n`;
+                if(teacher !== 'ללא מורה') msg += RLE + `${RLM}👨‍🏫 ${RLM}*מורה: ${teacher}*\n`;
+                msg += `\n`;
+                students.forEach(st => msg += RLE + `${RLM}✅ ${RLM}${st.name} (${st.school})\n`);
+                const btn = document.createElement('button');
+                btn.className = 'btn-whatsapp';
+                btn.style.marginBottom = '5px';
+                btn.innerText = `שלח רשימת עוברים ל${teacher} (${students.length})`;
+                btn.onclick = function() { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank'); };
+                passDiv.appendChild(btn);
+            }
+        } else {
+            passDiv.innerHTML = '<p style="color:#777; text-align:center;">אין עוברים</p>';
+        }
+
+        document.getElementById('pass-list-section').style.display = 'block';
+        document.getElementById('pass-list-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ============ דואר יוצא ============
+    function renderOutbox() {
+        const list = document.getElementById('outbox-list');
+        const saved = JSON.parse(localStorage.getItem(LS_PREFIX + 'whatsapp_outbox')) || [];
+        list.innerHTML = '';
+        if(saved.length === 0) { list.innerHTML = '<p style="text-align:center; color:#777; font-size:12px;">אין הודעות ממתינות</p>'; return; }
+        saved.forEach((item, i) => {
+            const div = document.createElement('div');
+            div.className = 'outbox-item';
+            div.innerHTML = `<div style="font-size:12px;"><strong>${item.name}</strong> <span style="color:#777">(${item.time})</span></div>
+                <div class="outbox-btn-group"><button style="background:#25D366; color:white;" onclick="sendSaved(${i})">שלח</button><button class="btn-delete" onclick="deleteSaved(${i})">מחק</button></div>`;
+            list.appendChild(div);
+        });
+    }
+    function sendSaved(i) {
+        const saved = JSON.parse(localStorage.getItem(LS_PREFIX + 'whatsapp_outbox')) || [];
+        if(saved[i]) window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(saved[i].text)}`, '_blank');
+    }
+    function deleteSaved(i) {
+        let saved = JSON.parse(localStorage.getItem(LS_PREFIX + 'whatsapp_outbox')) || [];
+        saved.splice(i, 1);
+        localStorage.setItem(LS_PREFIX + 'whatsapp_outbox', JSON.stringify(saved));
+        renderOutbox();
+    }
+    function clearOutbox() { if(confirm('למחוק הכל?')) { localStorage.removeItem(LS_PREFIX + 'whatsapp_outbox'); renderOutbox(); } }
+
+    // עדכון דואר יוצא אוטומטי כשטופס כישלון שומר הודעה
+    window.addEventListener('storage', function(e) {
+        if(e.key === LS_PREFIX + 'whatsapp_outbox') renderOutbox();
+    });
+
+    function resetForm() {
+        if(confirm('לנקות הכל?')) {
+            Object.keys(localStorage).filter(k => k.startsWith(LS_PREFIX)).forEach(k => localStorage.removeItem(k));
+            location.reload();
+        }
+    }
+
+    // ============ בוחן טסט פנימי + חתימה ============
+    function saveInternalTester() {
+        localStorage.setItem(LS_PREFIX + 'internal_tester_name', document.getElementById('internalTesterName').value);
+    }
+    function loadInternalTester() {
+        const saved = localStorage.getItem(LS_PREFIX + 'internal_tester_name');
+        if(saved) document.getElementById('internalTesterName').value = saved;
+    }
+
+    // חתימה
+    const sigCanvas = document.getElementById('internal-sig-canvas');
+    const sigCtx = sigCanvas.getContext('2d');
+    let sigDrawing = false;
+    const sigGetPos = (e) => { const r = sigCanvas.getBoundingClientRect(); return { x: (e.clientX || e.touches[0].clientX) - r.left, y: (e.clientY || e.touches[0].clientY) - r.top }; };
+    sigCanvas.addEventListener('mousedown', (e) => { sigDrawing = true; sigCtx.beginPath(); sigCtx.moveTo(sigGetPos(e).x, sigGetPos(e).y); });
+    sigCanvas.addEventListener('mousemove', (e) => { if(!sigDrawing)return; sigCtx.lineTo(sigGetPos(e).x, sigGetPos(e).y); sigCtx.stroke(); });
+    sigCanvas.addEventListener('mouseup', () => { sigDrawing = false; });
+    sigCanvas.addEventListener('touchstart', (e) => { sigDrawing = true; sigCtx.beginPath(); sigCtx.moveTo(sigGetPos(e).x, sigGetPos(e).y); e.preventDefault(); });
+    sigCanvas.addEventListener('touchmove', (e) => { if(!sigDrawing)return; sigCtx.lineTo(sigGetPos(e).x, sigGetPos(e).y); sigCtx.stroke(); e.preventDefault(); });
+    sigCanvas.addEventListener('touchend', () => { sigDrawing = false; });
+    function clearInternalSig() { sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height); }
+
+    function saveWithSmartName() {
+        const dateVal = document.getElementById('dateInput').value || 'ללא_תאריך';
+        const as = document.getElementById('areaSelect');
+        let areaName = (as.selectedIndex > 0) ? as.options[as.selectedIndex].text : 'כללי';
+        const safeDate = dateVal.replace(/\//g, '-').replace(/\./g, '-');
+        const safeArea = areaName.replace(/["']/g, '');
+        const fileName = `טסט פנימי - ${safeArea} - ${safeDate}`;
+        const origTitle = document.title;
+        document.title = fileName;
+        const titleTag = document.querySelector('title');
+        const origTag = titleTag ? titleTag.textContent : '';
+        if(titleTag) titleTag.textContent = fileName;
+        const origUrl = window.location.href;
+        try { window.history.replaceState({}, fileName, fileName.replace(/\s/g, '_') + '.html'); } catch(e) {}
+        window.print();
+        setTimeout(() => {
+            document.title = origTitle;
+            if(titleTag) titleTag.textContent = origTag;
+            try { window.history.replaceState({}, origTag, origUrl); } catch(e) {}
+        }, 1000);
+    }
+</script>
+</body>
+</html>

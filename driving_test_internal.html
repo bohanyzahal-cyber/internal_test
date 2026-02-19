@@ -439,24 +439,8 @@
         msg += RLE + `${RLM}👨‍🏫 ${RLM}*מורה: ${teacher}*\n`;
         msg += `----------------\n`;
 
-        // פירוט ליקויים מהציונים בטופס
-        const reasons = getFailReasons();
-        if(reasons.length > 0) {
-            msg += RLE + `*סיבות כישלון:*\n`;
-            reasons.forEach(r => {
-                if(r.severe) {
-                    msg += RLE + `${RLM}🔴 ${RLM}${r.name} (הפקעה)`;
-                } else {
-                    msg += RLE + `${RLM}⚠️ ${RLM}${r.name}`;
-                }
-                if(r.detail) msg += ` - ${r.detail}`;
-                msg += `\n`;
-            });
-            msg += `----------------\n`;
-        }
-
         if(notes) {
-            msg += RLE + `*פירוט נוסף:*\n${notes}\n`;
+            msg += RLE + `*פירוט ליקויים:*\n${notes}\n`;
             msg += `----------------\n`;
         }
         msg += RLE + `תאריך: ${new Date().toLocaleDateString('he-IL')}`;
