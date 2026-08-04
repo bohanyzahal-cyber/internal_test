@@ -248,7 +248,7 @@
         if (dashboard && dashboard.location.href !== 'about:blank') {
             dashboard.focus();
         } else {
-            window.open('internal_test.html', 'internal_test_dashboard');
+            window.open('index.html', 'internal_test_dashboard');
         }
     }
 
@@ -267,7 +267,7 @@
 
         // אם הסגירה נחסמה ע"י הדפדפן, ננווט חזרה לטסט פנימי
         if (!window.closed) {
-            window.location.href = 'internal_test.html';
+            window.location.href = 'index.html';
         }
     }
 

@@ -169,11 +169,12 @@
         </div>
         <div class="modal-field">
             <label>מורה:</label>
-            <input type="text" id="passModalTeacher" readonly style="background:#f0f0f0;">
+            <input type="text" id="passModalTeacher" list="passTeacherList" placeholder="שם המורה..." oninput="onPassTeacherInput()">
+            <datalist id="passTeacherList"></datalist>
         </div>
         <div class="modal-field">
             <label>הערות:</label>
-            <textarea id="passModalNotes" placeholder="כתוב הערות כאן..."></textarea>
+            <textarea id="passModalNotes" placeholder="כתוב הערות כאן..." oninput="savePassNoteDraft()"></textarea>
         </div>
         <div class="modal-buttons">
             <button class="modal-btn-send" onclick="sendPassWhatsApp()">📱 שלח למורה</button>
@@ -358,7 +359,7 @@
                     el.value = examData[i];
                     if(el.classList.contains('school-select') && el.value === 'other') toggleOtherInput(el);
                     if(el.classList.contains('teacher-select') && el.value === '__other__') toggleTeacherInput(el);
-                    if(el.classList.contains('result-select') && el.value === 'נכשל') el.previousElementSibling.style.display = 'inline-block';
+                    if(el.classList.contains('result-select')) showRowFormBtn(el.previousElementSibling, el.value);
                 }
             });
         }
@@ -437,45 +438,120 @@
         }
     }
 
+    // מציג את כפתור הפתיחה-מחדש בשורה, בהתאם לתוצאה (נכשל = טופס, עבר = הערות למורה)
+    function showRowFormBtn(btn, result) {
+        if(!btn) return;
+        if(result === 'עבר') {
+            btn.textContent = '💬';
+            btn.title = 'הערות למורה';
+        } else if(result === 'נכשל') {
+            btn.textContent = '📝';
+            btn.title = 'פתח טופס קיים';
+        } else {
+            btn.style.display = 'none';
+            return;
+        }
+        btn.style.display = 'inline-block';
+    }
+
     function checkFail(selectElem) {
         saveExamData();
         const btn = selectElem.previousElementSibling;
+        showRowFormBtn(btn, selectElem.value);
         if(selectElem.value === 'נכשל') {
-            btn.style.display = 'inline-block';
             const data = getRowData(selectElem);
             openFailWindow(buildFailUrl(data, false));
         } else if(selectElem.value === 'עבר') {
-            btn.style.display = 'none';
-            const data = getRowData(selectElem);
-            openPassModal(data);
-        } else {
-            btn.style.display = 'none';
+            openPassModal(getRowData(selectElem), selectElem.closest('tr'));
         }
     }
 
     function openFailForm(btn) {
-        // כפתור 📝 = פתח טופס קיים עם שחזור טיוטה
+        // נכשל: פתח טופס קיים עם שחזור טיוטה | עבר: פתח שוב את הערות המורה
         const selectElem = btn.nextElementSibling;
         if(selectElem.value === 'נכשל') {
             const data = getRowData(selectElem);
             openFailWindow(buildFailUrl(data, true));
+        } else if(selectElem.value === 'עבר') {
+            openPassModal(getRowData(selectElem), selectElem.closest('tr'));
         }
     }
 
     // ============ מודל הערות עובר ============
     let passModalData = null;
+    let passModalRow = null;
+    const PASS_NOTES_KEY = LS_PREFIX + 'pass_notes';
 
-    function openPassModal(data) {
+    function getPassNotesMap() {
+        try { return JSON.parse(localStorage.getItem(PASS_NOTES_KEY)) || {}; } catch(e) { return {}; }
+    }
+
+    function passRowIndex(row) {
+        return row ? Array.prototype.indexOf.call(row.parentNode.children, row) : -1;
+    }
+
+    // טיוטת ההערות נשמרת לפי שורה ומוצמדת לשם הנבחן, כדי שלא תדלוף לנבחן אחר באותה שורה
+    function savePassNoteDraft() {
+        if(!passModalData || !passModalRow) return;
+        const idx = passRowIndex(passModalRow);
+        if(idx < 0) return;
+        const map = getPassNotesMap();
+        const val = document.getElementById('passModalNotes').value;
+        if(val.trim()) map[idx] = { name: passModalData.name, notes: val };
+        else delete map[idx];
+        localStorage.setItem(PASS_NOTES_KEY, JSON.stringify(map));
+    }
+
+    function openPassModal(data, row) {
         passModalData = data;
+        passModalRow = row || null;
         document.getElementById('passModalName').value = data.name;
         document.getElementById('passModalTeacher').value = data.teacher;
-        document.getElementById('passModalNotes').value = '';
+        document.getElementById('passTeacherList').innerHTML = teachersList.map(t => `<option value="${t}">`).join('');
+        const rec = getPassNotesMap()[passRowIndex(passModalRow)];
+        document.getElementById('passModalNotes').value = (rec && rec.name === data.name) ? rec.notes : '';
         document.getElementById('passModal').classList.add('active');
     }
 
     function closePassModal() {
         document.getElementById('passModal').classList.remove('active');
         passModalData = null;
+        passModalRow = null;
+    }
+
+    // כתיבת שם המורה מהמודל בחזרה לשורה בטבלה
+    function setRowTeacher(row, name) {
+        const sel = row.querySelector('.teacher-select');
+        const inp = row.querySelector('.teacher-other-input');
+        const clearBtn = row.querySelector('.btn-clear-teacher');
+        if(!sel || !inp) return;
+        if(teachersList.includes(name)) {
+            sel.value = name; inp.value = '';
+            inp.style.display = 'none';
+            sel.classList.remove('hidden-print'); inp.classList.remove('visible-print');
+            if(clearBtn) clearBtn.style.display = 'none';
+        } else {
+            sel.value = '__other__'; inp.value = name;
+            inp.style.display = 'block';
+            sel.classList.add('hidden-print'); inp.classList.add('visible-print');
+            if(clearBtn) clearBtn.style.display = 'block';
+        }
+        saveExamData();
+    }
+
+    function onPassTeacherInput() {
+        if(!passModalData) return;
+        const name = document.getElementById('passModalTeacher').value.trim();
+        passModalData.teacher = name;
+        if(passModalRow && name) setRowTeacher(passModalRow, name);
+    }
+
+    function requirePassTeacher() {
+        onPassTeacherInput();
+        if(passModalData && passModalData.teacher.trim()) return true;
+        alert('אנא מלא את שם המורה');
+        document.getElementById('passModalTeacher').focus();
+        return false;
     }
 
     function buildPassMessage() {
@@ -503,7 +579,7 @@
 
     function sendPassWhatsApp() {
         if(!passModalData) return;
-        if(!passModalData.teacher.trim()) { alert('אנא וודא ששם המורה מלא'); return; }
+        if(!requirePassTeacher()) return;
         const msg = buildPassMessage();
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         closePassModal();
@@ -511,7 +587,7 @@
 
     function savePassToOutbox() {
         if(!passModalData) return;
-        if(!passModalData.teacher.trim()) { alert('אנא וודא ששם המורה מלא'); return; }
+        if(!requirePassTeacher()) return;
         const msg = buildPassMessage();
         const savedMessages = JSON.parse(localStorage.getItem(LS_PREFIX + 'whatsapp_outbox')) || [];
         savedMessages.push({ name: passModalData.name, text: msg, time: new Date().toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'}) });
